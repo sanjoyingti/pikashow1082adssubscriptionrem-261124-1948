@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="pika_ink">#0B0E14</color>
-    <color name="ic_launcher_background">#E4292B</color>
+    <color name="pika_background">#FFFDFDFD</color>
+    <color name="pika_background_dark">#FF0B0E14</color>
+    <color name="pika_launcher_background">#FFE4292B</color>
 </resources>

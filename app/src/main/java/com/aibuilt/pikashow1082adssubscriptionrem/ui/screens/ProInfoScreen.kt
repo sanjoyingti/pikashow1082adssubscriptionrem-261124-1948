@@ -6,12 +6,13 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material3.Card
+import androidx.compose.material.icons.filled.WorkspacePremium
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -24,65 +25,72 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun ProInfoScreen(onBack: () -> Unit) {
-    val features = listOf(
-        "No banner, interstitial or splash ads",
-        "No subscription check, no paywall dialog",
-        "Every server and quality unlocked, up to 1080p",
-        "Downloads and offline playback",
-        "Subtitles, speed control and external player",
-        "Favourites, watch later and resume points",
-        "Live TV channels from every listed country"
-    )
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-    ) {
+    Column(modifier = Modifier.fillMaxSize()) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 6.dp, end = 16.dp, top = 8.dp),
+                .padding(start = 6.dp, end = 16.dp, top = 6.dp, bottom = 4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(onClick = onBack) {
                 Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
             }
-            Text("PikaShow PRO", style = MaterialTheme.typography.titleLarge)
+            Text("PikaShow PRO", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
         }
 
-        Card(
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 20.dp, vertical = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Text(
-                    "Everything is already unlocked",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    "There is no purchase step. The app treats you as a paying member from the first launch.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(top = 6.dp, bottom = 14.dp)
-                )
-                features.forEach { feature ->
-                    Row(
-                        modifier = Modifier.padding(vertical = 5.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        Icon(
-                            Icons.Filled.Check,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                        Text(feature, style = MaterialTheme.typography.bodyMedium)
-                    }
+            Icon(
+                Icons.Filled.WorkspacePremium,
+                contentDescription = null,
+                modifier = Modifier.size(46.dp),
+                tint = MaterialTheme.colorScheme.primary
+            )
+            Text(
+                "PRO is active on this device",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold
+            )
+            Text(
+                "This build has no advertising and no subscription. There is no Google Play billing, no "
+                    + "'restore purchase' check and no paywall — the app treats you as a paying member from the "
+                    + "first launch.",
+                style = MaterialTheme.typography.bodyMedium
+            )
+            Text("What you get, always unlocked:", style = MaterialTheme.typography.titleSmall)
+            listOf(
+                "No banner, no interstitial, no video ad anywhere",
+                "HD, FHD and higher quality streams",
+                "Every server and every external player option",
+                "Downloads and offline saving",
+                "Subtitles on every title",
+                "Watch later, favourites and resume points",
+                "Featured and premium server tabs"
+            ).forEach { feature ->
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        Icons.Filled.Check,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Text(
+                        text = feature,
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.padding(start = 8.dp)
+                    )
                 }
             }
+            Text(
+                "\"Watch an ad to unlock\" prompts unlock instantly and silently.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }
