@@ -4,8 +4,10 @@ import android.Manifest
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -134,7 +136,7 @@ private fun PikaRoot(settings: Settings) {
                     onOpenLive = { navController.navigate("live") },
                     onOpenDownloads = { navController.navigate("downloads") },
                     onResume = { contentId, episodeId, name ->
-                        val key = "show-$contentId"
+                        val key = if (episodeId != 0) "episode-$episodeId" else "show-$contentId"
                         MediaCache.put(key, name)
                         navController.navigate("player/$key/$contentId/$episodeId/${settings.preferredServer}/false")
                     }
@@ -155,7 +157,7 @@ private fun PikaRoot(settings: Settings) {
                 LibraryScreen(
                     onOpenShow = { navController.navigate("detail/$it") },
                     onResume = { contentId, episodeId, name ->
-                        val key = "show-$contentId"
+                        val key = if (episodeId != 0) "episode-$episodeId" else "show-$contentId"
                         MediaCache.put(key, name)
                         navController.navigate("player/$key/$contentId/$episodeId/${settings.preferredServer}/false")
                     }
@@ -163,13 +165,18 @@ private fun PikaRoot(settings: Settings) {
             }
 
             composable("settings") {
-                SettingsScreen(onOpenAbout = { navController.navigate("about") })
+                SettingsScreen(
+                    onOpenAbout = { navController.navigate("about") },
+                    onOpenDownloads = { navController.navigate("downloads") },
+                    onOpenLibrary = { navController.navigate("library") }
+                )
             }
 
             composable("downloads") {
                 DownloadsScreen(
-                    onPlayOffline = { contentId, episodeId, name, path ->
-                        val key = "show-$contentId"
+                    onOpenShow = { contentId -> navController.navigate("detail/$contentId") },
+                    onPlayLocal = { contentId, episodeId, name, path ->
+                        val key = if (episodeId != 0) "episode-$episodeId" else "show-$contentId"
                         MediaCache.put(key, name, path)
                         navController.navigate("player/$key/$contentId/$episodeId/-1/false")
                     }
@@ -220,9 +227,7 @@ private fun PikaRoot(settings: Settings) {
 }
 
 @Composable
-private fun rememberLauncherForNotification(): androidx.activity.result.ActivityResultLauncher<String> {
-    val launcher = androidx.activity.compose.rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { }
+private fun rememberLauncherForNotification(): ActivityResultLauncher<String> {
+    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { }
     return remember(launcher) { launcher }
 }
