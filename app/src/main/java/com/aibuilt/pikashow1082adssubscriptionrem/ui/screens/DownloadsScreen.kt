@@ -1,24 +1,21 @@
 package com.aibuilt.pikashow1082adssubscriptionrem.ui.screens
 
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material3.AssistChip
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -44,26 +41,31 @@ import com.aibuilt.pikashow1082adssubscriptionrem.viewmodel.LibraryViewModel
 
 @Composable
 fun DownloadsScreen(
-    onPlay: (key: String, contentId: Int, episodeId: Int) -> Unit,
+    onBack: () -> Unit,
+    onPlay: (contentId: Int, episodeId: Int, key: String) -> Unit,
     viewModel: LibraryViewModel = viewModel()
 ) {
     val downloads by viewModel.downloads.collectAsState()
 
     Column(modifier = Modifier.fillMaxSize()) {
-        Text(
-            text = "Downloads",
-            style = MaterialTheme.typography.titleLarge,
-            modifier = Modifier.padding(start = 16.dp, top = 12.dp, bottom = 6.dp)
-        )
-        Text(
-            text = "Saved to this device · playable without internet",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 2.dp)
-        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 4.dp, end = 12.dp, top = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(onClick = onBack) {
+                Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
+            }
+            Text(
+                text = "Downloads",
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.weight(1f)
+            )
+        }
 
         if (downloads.isEmpty()) {
-            EmptyState("Nothing downloaded yet", "Open a title and tap Download")
+            EmptyState("No downloads yet", "Open a title and tap download to save it offline")
             return@Column
         }
 
@@ -71,13 +73,13 @@ fun DownloadsScreen(
             items(downloads, key = { "${it.id}-${it.episodeId}" }) { item ->
                 DownloadRow(
                     item = item,
-                    onPlay = {
-                        val key = "dl-${item.id}-${item.episodeId}"
-                        MediaCache.put(key, item.name, item.path)
-                        onPlay(key, item.id, item.episodeId)
+                    onPlay = { target ->
+                        val key = if (target.episodeId == 0) "show-${target.id}" else "episode-${target.episodeId}"
+                        MediaCache.put(key, target.name, target.path)
+                        onPlay(target.id, target.episodeId, key)
                     },
-                    onCancel = { viewModel.cancelDownload(item) },
                     onResume = { viewModel.resumeDownload(item) },
+                    onCancel = { viewModel.cancelDownload(item) },
                     onDelete = { viewModel.deleteDownload(item) }
                 )
             }
@@ -88,15 +90,14 @@ fun DownloadsScreen(
 @Composable
 private fun DownloadRow(
     item: DownloadItem,
-    onPlay: () -> Unit,
-    onCancel: () -> Unit,
+    onPlay: (DownloadItem) -> Unit,
     onResume: () -> Unit,
+    onCancel: () -> Unit,
     onDelete: () -> Unit
 ) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(enabled = item.isReady(), onClick = onPlay)
             .padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -114,64 +115,64 @@ private fun DownloadRow(
             ) {
                 Text(
                     text = item.name,
+                    style = MaterialTheme.typography.bodyMedium,
                     maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                    style = MaterialTheme.typography.bodyMedium
+                    overflow = TextOverflow.Ellipsis
                 )
                 Text(
                     text = statusLabel(item),
                     style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = when (item.status) {
+                        "failed" -> MaterialTheme.colorScheme.primary
+                        "completed" -> MaterialTheme.colorScheme.onSurfaceVariant
+                        else -> MaterialTheme.colorScheme.onSurfaceVariant
+                    }
                 )
-            }
-            when {
-                item.isReady() -> IconButton(onClick = onPlay) {
-                    Icon(
-                        Icons.Filled.PlayArrow,
-                        contentDescription = "Play offline",
-                        tint = MaterialTheme.colorScheme.primary
+                if (!item.isReady()) {
+                    LinearProgressIndicator(
+                        progress = { item.percent() / 100f },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 6.dp)
                     )
                 }
-
-                item.status == "failed" -> IconButton(onClick = onResume) {
-                    Icon(Icons.Filled.Download, contentDescription = "Retry download")
+            }
+            when {
+                item.isReady() -> {
+                    IconButton(onClick = { onPlay(item) }) {
+                        Icon(
+                            Icons.Filled.PlayArrow,
+                            contentDescription = "Play offline",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                    IconButton(onClick = onDelete) {
+                        Icon(Icons.Filled.Delete, contentDescription = "Delete")
+                    }
                 }
 
-                else -> IconButton(onClick = onCancel) {
-                    Icon(Icons.Filled.Cancel, contentDescription = "Cancel download")
+                item.status == "failed" -> {
+                    IconButton(onClick = onResume) {
+                        Icon(Icons.Filled.Refresh, contentDescription = "Retry")
+                    }
+                    IconButton(onClick = onDelete) {
+                        Icon(Icons.Filled.Delete, contentDescription = "Delete")
+                    }
                 }
-            }
-            IconButton(onClick = onDelete) {
-                Icon(Icons.Filled.Delete, contentDescription = "Delete file")
-            }
-        }
-        if (!item.isReady() && item.status != "failed") {
-            LinearProgressIndicator(
-                progress = { item.percent() / 100f },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 6.dp)
-                    .height(3.dp)
-            )
-        }
-        if (item.status == "failed") {
-            Row(
-                modifier = Modifier.padding(top = 4.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                AssistChip(
-                    onClick = onResume,
-                    label = { Text("Retry") },
-                    leadingIcon = { Icon(Icons.Filled.Download, contentDescription = null) }
-                )
+
+                else -> {
+                    IconButton(onClick = onCancel) {
+                        Icon(Icons.Filled.Cancel, contentDescription = "Pause and remove")
+                    }
+                }
             }
         }
     }
 }
 
-private fun statusLabel(item: DownloadItem): String = when {
-    item.isReady() -> "Ready · ${(item.bytes / (1024 * 1024))} MB"
-    item.status == "failed" -> "Failed · tap retry"
-    item.status == "completed" -> "Finished"
+private fun statusLabel(item: DownloadItem): String = when (item.status) {
+    "completed" -> "Ready to play offline"
+    "failed" -> "Download failed · tap retry"
+    "queued" -> "Waiting for connection"
     else -> "Downloading ${item.percent()}%"
 }

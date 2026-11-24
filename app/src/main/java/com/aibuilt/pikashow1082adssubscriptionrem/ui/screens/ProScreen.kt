@@ -1,12 +1,15 @@
 package com.aibuilt.pikashow1082adssubscriptionrem.ui.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -18,59 +21,103 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-
-private val perks = listOf(
-    "Zero banner, interstitial and video ads",
-    "No subscription check — PRO is always on",
-    "HD and FHD streams with every server",
-    "Downloads and offline playback",
-    "Subtitles, watch later and favourites",
-    "All live TV countries and channel lists"
-)
 
 @Composable
 fun ProScreen(onBack: () -> Unit) {
+    val benefits = listOf(
+        "Zero ad breaks while streaming",
+        "No subscription, no login wall",
+        "All servers unlocked",
+        "Up to 1080p playback",
+        "Unlimited offline downloads",
+        "Live TV from 6 countries",
+        "Subtitles and speed control"
+    )
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(6.dp)) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 4.dp, end = 12.dp, top = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             IconButton(onClick = onBack) {
                 Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
             }
             Text("PRO", style = MaterialTheme.typography.titleLarge)
         }
+
         Column(
-            modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+                .clip(RoundedCornerShape(18.dp))
+                .background(
+                    Brush.verticalGradient(
+                        listOf(
+                            MaterialTheme.colorScheme.primary,
+                            MaterialTheme.colorScheme.primaryContainer
+                        )
+                    )
+                )
+                .padding(20.dp)
         ) {
             Text(
-                "Everything is unlocked",
-                style = MaterialTheme.typography.headlineSmall
+                text = "PRO unlocked",
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onPrimary
             )
             Text(
-                "This build never asks Google Play for a purchase and never shows a paywall. Every account is treated as purchased.",
+                text = "Everything in this app is already free. The paywall and the ad banners are gone.",
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onPrimary,
+                modifier = Modifier.padding(top = 8.dp)
             )
-            perks.forEach { perk ->
-                Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        }
+
+        Text(
+            text = "What you get",
+            style = MaterialTheme.typography.titleSmall,
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)
+        )
+
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            benefits.forEach { benefit ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     Icon(
                         Icons.Filled.CheckCircle,
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(20.dp)
                     )
-                    Text(text = perk, modifier = Modifier.padding(start = 10.dp))
+                    Text(
+                        text = benefit,
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.padding(start = 10.dp)
+                    )
                 }
             }
-            Text(
-                "Nothing to buy, nothing to restore.",
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(top = 14.dp, bottom = 24.dp)
-            )
         }
+
+        Text(
+            text = "Price: 0 · Valid forever · No renewals",
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(16.dp)
+        )
     }
 }
