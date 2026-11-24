@@ -10,27 +10,24 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ChevronRight
-import androidx.compose.material.icons.filled.Download
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.filled.VideoLibrary
+import androidx.compose.material.icons.filled.WorkspacePremium
+import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -42,65 +39,106 @@ import com.aibuilt.pikashow1082adssubscriptionrem.viewmodel.SettingsViewModel
 
 @Composable
 fun SettingsScreen(
-    onBack: () -> Unit,
-    onOpenPro: () -> Unit,
-    onOpenDownloads: () -> Unit,
-    onOpenLibrary: () -> Unit,
+    onOpenAbout: () -> Unit,
     viewModel: SettingsViewModel = viewModel()
 ) {
     val settings by viewModel.settings.collectAsState()
-    var name by remember { mutableStateOf(settings.accountName) }
-    var email by remember { mutableStateOf(settings.accountEmail) }
-    var signInError by remember { mutableStateOf<String?>(null) }
-    var signedIn by remember(settings.accountName) { mutableStateOf(settings.accountName.isNotBlank()) }
+    var name by rememberSaveable { mutableStateOf("") }
+    var email by rememberSaveable { mutableStateOf("") }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
+            .padding(bottom = 28.dp)
     ) {
+        Text(
+            text = "Settings",
+            style = MaterialTheme.typography.titleLarge,
+            modifier = Modifier.padding(start = 16.dp, top = 12.dp, bottom = 4.dp)
+        )
+
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 6.dp, end = 16.dp, top = 8.dp),
+                .clickable(onClick = onOpenAbout)
+                .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(onClick = onBack) {
-                Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
-            }
-            Text("Settings", style = MaterialTheme.typography.titleLarge)
+            Icon(Icons.Filled.WorkspacePremium, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+            Text(
+                text = "PRO status",
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 12.dp)
+            )
+            AssistChip(
+                onClick = onOpenAbout,
+                label = { Text("Active") }
+            )
+            Icon(Icons.Filled.ChevronRight, contentDescription = null)
         }
 
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp)
-                .clickable { onOpenPro() }
-        ) {
+        HorizontalDivider()
+
+        Text(
+            text = "Account",
+            style = MaterialTheme.typography.titleSmall,
+            modifier = Modifier.padding(start = 16.dp, top = 16.dp, bottom = 6.dp)
+        )
+
+        if (settings.accountName.isBlank()) {
+            Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text("Display name") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = email,
+                    onValueChange = { email = it },
+                    label = { Text("Email") },
+                    singleLine = true,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp)
+                )
+                Button(
+                    onClick = { if (name.isNotBlank() && email.contains("@")) viewModel.signIn(name, email) },
+                    enabled = name.isNotBlank() && email.contains("@"),
+                    modifier = Modifier.padding(top = 10.dp)
+                ) {
+                    Text("Sign in")
+                }
+            }
+        } else {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(14.dp),
+                    .padding(horizontal = 16.dp, vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(Icons.Filled.Star, contentDescription = null, tint = MaterialTheme.colorScheme.secondary)
-                Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(horizontal = 12.dp)
-                ) {
-                    Text("PRO unlocked", fontWeight = FontWeight.SemiBold)
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(settings.accountName, fontWeight = FontWeight.SemiBold)
                     Text(
-                        "No ads, no paywall, every server and download included",
-                        style = MaterialTheme.typography.labelSmall,
+                        text = settings.accountEmail,
+                        style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                Icon(Icons.Filled.ChevronRight, contentDescription = null)
+                OutlinedButton(onClick = { viewModel.signOut() }) { Text("Sign out") }
             }
         }
 
-        SectionTitle("Appearance")
+        HorizontalDivider(modifier = Modifier.padding(top = 12.dp))
+
+        Text(
+            text = "Appearance",
+            style = MaterialTheme.typography.titleSmall,
+            modifier = Modifier.padding(start = 16.dp, top = 16.dp, bottom = 6.dp)
+        )
         Row(
             modifier = Modifier.padding(horizontal = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -114,14 +152,19 @@ fun SettingsScreen(
             }
         }
 
-        SectionTitle("Playback")
+        Text(
+            text = "Playback",
+            style = MaterialTheme.typography.titleSmall,
+            modifier = Modifier.padding(start = 16.dp, top = 16.dp, bottom = 6.dp)
+        )
         Text(
             text = "Default quality",
-            style = MaterialTheme.typography.bodyMedium,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(horizontal = 16.dp)
         )
         Row(
-            modifier = Modifier.padding(horizontal = 16.dp),
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             StreamSources.qualities.forEach { (label, _) ->
@@ -134,14 +177,15 @@ fun SettingsScreen(
         }
         Text(
             text = "Preferred server",
-            style = MaterialTheme.typography.bodyMedium,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(start = 16.dp, top = 8.dp)
         )
         Row(
-            modifier = Modifier.padding(horizontal = 16.dp),
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            (0 until 3).forEach { index ->
+            (0..2).forEach { index ->
                 FilterChip(
                     selected = settings.preferredServer == index,
                     onClick = { viewModel.setServer(index) },
@@ -149,125 +193,51 @@ fun SettingsScreen(
                 )
             }
         }
-        SwitchRow(
-            title = "Subtitles by default",
-            checked = settings.subtitlesOn,
-            onChange = { viewModel.setSubtitles(it) }
-        )
 
-        SectionTitle("Storage")
         Row(
-            modifier = Modifier.padding(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            OutlinedButton(onClick = onOpenDownloads) {
-                Icon(Icons.Filled.Download, contentDescription = null)
-                Text("  Downloads")
-            }
-            OutlinedButton(onClick = onOpenLibrary) {
-                Icon(Icons.Filled.VideoLibrary, contentDescription = null)
-                Text("  Library")
-            }
-        }
-
-        SectionTitle("Account")
-        if (signedIn) {
-            Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-                Text(settings.accountName, fontWeight = FontWeight.SemiBold)
+            Column(modifier = Modifier.weight(1f)) {
+                Text("Subtitles by default")
                 Text(
-                    settings.accountEmail,
+                    text = "Turn on English subtitles when playback starts",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                OutlinedButton(
-                    onClick = {
-                        viewModel.signOut()
-                        signedIn = false
-                        name = ""
-                        email = ""
-                    },
-                    modifier = Modifier.padding(top = 8.dp)
-                ) { Text("Sign out") }
             }
-        } else {
-            Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-                OutlinedTextField(
-                    value = name,
-                    onValueChange = {
-                        name = it
-                        signInError = null
-                    },
-                    label = { Text("Name") },
-                    singleLine = true,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 8.dp)
-                )
-                OutlinedTextField(
-                    value = email,
-                    onValueChange = {
-                        email = it
-                        signInError = null
-                    },
-                    label = { Text("Email") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
-                signInError?.let {
-                    Text(
-                        it,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.padding(top = 4.dp)
-                    )
-                }
-                Button(
-                    onClick = {
-                        when {
-                            name.isBlank() -> signInError = "Enter your name"
-                            !email.contains("@") || !email.substringAfter("@").contains(".") ->
-                                signInError = "Enter a valid email"
-                            else -> {
-                                viewModel.signIn(name, email)
-                                signedIn = true
-                            }
-                        }
-                    },
-                    modifier = Modifier.padding(top = 8.dp, bottom = 8.dp)
-                ) { Text("Save account") }
-            }
+            Switch(checked = settings.subtitlesOn, onCheckedChange = viewModel::setSubtitles)
         }
 
-        HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text("Autoplay next")
+                Text(
+                    text = "Start the next episode automatically",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Switch(checked = settings.autoplay, onCheckedChange = viewModel::setAutoplay)
+        }
 
-        Text(
-            text = "PikaShow 10.8.2 · no ads · no subscription",
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
-        )
-    }
-}
+        HorizontalDivider(modifier = Modifier.padding(top = 8.dp))
 
-@Composable
-private fun SectionTitle(text: String) {
-    Text(
-        text = text,
-        style = MaterialTheme.typography.titleSmall,
-        fontWeight = FontWeight.SemiBold,
-        modifier = Modifier.padding(start = 16.dp, top = 18.dp, bottom = 6.dp)
-    )
-}
-
-@Composable
-private fun SwitchRow(title: String, checked: Boolean, onChange: (Boolean) -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 6.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(title, modifier = Modifier.weight(1f))
-        Switch(checked = checked, onCheckedChange = onChange)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text("About & PRO", modifier = Modifier.weight(1f))
+            TextButton(onClick = onOpenAbout) { Text("Open") }
+        }
     }
 }
