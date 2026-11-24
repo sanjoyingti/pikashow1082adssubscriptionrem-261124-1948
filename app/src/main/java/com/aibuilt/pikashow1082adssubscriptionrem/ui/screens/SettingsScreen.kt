@@ -25,7 +25,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Row as M3Row
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -87,9 +86,11 @@ fun SettingsScreen(
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.onPrimaryContainer
                         )
-                        Column(modifier = Modifier
-                            .weight(1f)
-                            .padding(horizontal = 10.dp)) {
+                        Column(
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(horizontal = 10.dp)
+                        ) {
                             Text(
                                 "PRO is unlocked",
                                 style = MaterialTheme.typography.titleSmall,
@@ -172,7 +173,7 @@ fun SettingsScreen(
 
             item { SectionTitle("Downloads") }
             item {
-                M3Row(
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable(onClick = onOpenDownloads)
